@@ -73,9 +73,12 @@ const feishuClient = new Client({
 
 // 本地存储配置
 const LOCAL_CONFIG = {
-  base_path: CONFIG.local?.base_path 
-    ? path.expandUser(CONFIG.local.base_path) 
-    : path.join(os.homedir(), 'OpenClaw_Archives', 'daily_logs')
+  base_path: path.join(
+    CONFIG.local?.base_path 
+      ? CONFIG.local.base_path.replace(/^~/, os.homedir()) 
+      : path.join(os.homedir(), 'OpenClaw_Archives'),
+    'daily_logs'
+  )
 };
 
 const FEISHU_API_BASE = 'https://open.feishu.cn/open-apis';
