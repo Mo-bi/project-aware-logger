@@ -1,0 +1,38 @@
+{
+  "name": "project-aware-logger",
+  "version": "1.0.0",
+  "description": "智能项目感知日志系统 - 自动任务分级与文档管理",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "openclaw",
+    "skill",
+    "project",
+    "logger",
+    "task-management",
+    "documentation"
+  ],
+  "author": "Neo",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.13.6",
+    "fs-extra": "^11.3.4",
+    "path": "^0.12.7",
+    "yaml": "^2.8.2"
+  },
+  "openclaw": {
+    "skill": true,
+    "version": "1.0.0",
+    "description": "智能区分一次性查询、短期任务与长期项目，本地+飞书双备份，保持对话连续性",
+    "category": "productivity",
+    "tags": [
+      "project",
+      "task",
+      "documentation",
+      "feishu",
+      "backup"
+    ]
+  }
+}

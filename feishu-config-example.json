@@ -1,0 +1,51 @@
+{
+  "storage": {
+    "local": {
+      "base_path": "~/OpenClaw_Archives",
+      "auto_create_dirs": true
+    },
+    "feishu": {
+      "enabled": true,
+      "app_id": "你的飞书应用ID",
+      "app_secret": "你的飞书应用密钥",
+      "default_folder": "你的飞书文件夹token",
+      "sync_on_complete": true,
+      "sync_interval_minutes": 60
+    }
+  },
+  "thresholds": {
+    "quick_query_max_rounds": 3,
+    "short_task_max_rounds": 10,
+    "short_task_max_duration_hours": 4,
+    "auto_new_volume_lines": 500,
+    "auto_new_volume_days": 1
+  },
+  "behavior": {
+    "auto_detect_project": true,
+    "ask_before_new_volume": true,
+    "show_progress_summary": true
+  }
+}
+
+/*
+飞书配置获取步骤：
+
+1. 创建飞书应用
+   - 访问 https://open.feishu.cn/
+   - 创建企业自建应用
+   - 获取 App ID 和 App Secret
+
+2. 配置权限
+   - 添加"获取用户访问飞书云文档的权限"
+   - 添加"获取与更新文档内容权限"
+
+3. 获取文件夹token
+   - 在飞书云文档创建文件夹
+   - 右键文件夹 → 获取链接
+   - 从链接中提取 token，格式如：folder/xxxxxxxxxx
+
+4. 启用配置
+   - 复制此文件为 ~/.openclaw/config/project-aware-logger.json
+   - 填写你的实际凭证
+   - 重启 OpenClaw 或重新加载技能
+*/
