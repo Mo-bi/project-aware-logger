@@ -7,7 +7,9 @@
  * 
  * 使用方法: 
  *   node archive.js "标题" < content.md
- *   node archive.js "标题" content.md
+ * 
+ * 配置:
+ *   复制 config.example.json 为 config.json 并填入你的飞书配置
  */
 
 const fs = require('fs');
@@ -16,25 +18,64 @@ const os = require('os');
 const axios = require('axios');
 const { Client } = require('@larksuiteoapi/node-sdk');
 
+// ============== 配置加载 ==============
+
+function loadConfig() {
+  const configPath = path.join(__dirname, 'config.json');
+  const examplePath = path.join(__dirname, 'config.example.json');
+  
+  let config;
+  
+  // 优先使用 config.json
+  if (fs.existsSync(configPath)) {
+    try {
+      config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+      console.log('📋 已加载 config.json 配置');
+    } catch (e) {
+      console.error('❌ config.json 解析失败:', e.message);
+      console.log('📋 使用默认配置...');
+      config = null;
+    }
+  }
+  
+  // 如果没有 config.json 或加载失败，使用示例配置
+  if (!config) {
+    try {
+      config = JSON.parse(fs.readFileSync(examplePath, 'utf8'));
+      console.log('📋 已加载 config.example.json (请复制为 config.json 并配置)');
+    } catch (e) {
+      console.error('❌ 无法加载配置:', e.message);
+      process.exit(1);
+    }
+  }
+  
+  // 验证必要配置
+  if (!config.feishu?.app_id || config.feishu.app_id === 'YOUR_FEISHU_APP_ID') {
+    console.error('\n⚠️  请先配置飞书应用信息!');
+    console.log('   1. 复制 config.example.json 为 config.json');
+    console.log('   2. 填入你的飞书 App ID 和 App Secret');
+    console.log('   3. 获取你的 open_id 并填入\n');
+    process.exit(1);
+  }
+  
+  return config;
+}
+
+const CONFIG = loadConfig();
+
 // 飞书 SDK 客户端
 const feishuClient = new Client({
-  appId: 'cli_a92ac4faffb8dcd9',
-  appSecret: 'qJ36RLUleQ8aC0iSx6CH3fIA4QcGtg2C',
+  appId: CONFIG.feishu.app_id,
+  appSecret: CONFIG.feishu.app_secret,
   appType: 0,
   domain: 'https://open.feishu.cn'
 });
 
-// 配置
-const CONFIG = {
-  local: {
-    base_path: path.join(os.homedir(), 'OpenClaw_Archives', 'daily_logs')
-  },
-  feishu: {
-    app_id: 'cli_a92ac4faffb8dcd9',
-    app_secret: 'qJ36RLUleQ8aC0iSx6CH3fIA4QcGtg2C',
-    // 李梦溪的 openid
-    member_id: 'ou_b3d2eb77869e0c864b3b32ed7f5a074c'
-  }
+// 本地存储配置
+const LOCAL_CONFIG = {
+  base_path: CONFIG.local?.base_path 
+    ? path.expandUser(CONFIG.local.base_path) 
+    : path.join(os.homedir(), 'OpenClaw_Archives', 'daily_logs')
 };
 
 const FEISHU_API_BASE = 'https://open.feishu.cn/open-apis';
@@ -129,8 +170,14 @@ async function writeFeishuDocContent(docToken, content, token) {
   }
 }
 
-// 设置文档权限 - 给李梦溪编辑权限 (使用 SDK)
+// 设置文档权限 - 给指定用户编辑权限 (使用 SDK)
 async function setDocumentPermission(docToken) {
+  // 如果没有配置 member_id，跳过权限设置
+  if (!CONFIG.feishu.member_id || CONFIG.feishu.member_id === 'YOUR_OPEN_ID') {
+    console.log('   ⚠️ 未配置 member_id，跳过权限设置');
+    return { success: false, error: 'No member_id configured' };
+  }
+  
   try {
     const response = await feishuClient.drive.permissionMember.create({
       path: { token: docToken },
@@ -162,7 +209,7 @@ function archiveLocal(title, content) {
   const today = new Date().toISOString().split('T')[0];
   const safeTitle = title.replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g, '_');
   const filename = `${today}_${safeTitle}.md`;
-  const filepath = path.join(CONFIG.local.base_path, filename);
+  const filepath = path.join(LOCAL_CONFIG.base_path, filename);
   
   // 创建目录
   fs.mkdirSync(path.dirname(filepath), { recursive: true });
@@ -176,7 +223,7 @@ function archiveLocal(title, content) {
 // ============== 主函数 ==============
 
 async function archive(title, content) {
-  console.log(`📝 开始归档: ${title}`);
+  console.log(`\n📝 开始归档: ${title}`);
   console.log(`⏰ 时间: ${new Date().toISOString()}`);
   
   // 1. 本地归档
@@ -202,13 +249,11 @@ async function archive(title, content) {
     const docToken = await createFeishuDoc(title, content, token);
     console.log('   📄 文档创建成功');
     
-    // ⚠️ 关键：设置李梦溪的编辑权限
+    // 设置编辑权限
     console.log('   🔐 正在设置权限...');
     const permResult = await setDocumentPermission(docToken);
     if (permResult.success) {
-      console.log('   ✅ 李梦溪编辑权限已设置');
-    } else {
-      console.log('   ⚠️ 权限设置返回: ' + permResult.error);
+      console.log('   ✅ 编辑权限已设置');
     }
     
     feishuUrl = `https://feishu.cn/docx/${docToken}`;
@@ -223,7 +268,6 @@ async function archive(title, content) {
   console.log('📊 归档结果:');
   console.log(`   本地: ${localPath ? '✅ 成功' : '❌ 失败'}`);
   console.log(`   飞书: ${feishuUrl ? '✅ 成功' : '❌ 失败'}`);
-  console.log(`   权限: ✅ 已为李梦溪设置编辑权限`);
   if (feishuUrl) {
     console.log(`   链接: ${feishuUrl}`);
   }
@@ -238,12 +282,19 @@ if (require.main === module) {
   
   if (args.length === 0) {
     console.log(`
-用法: node archive.js <标题> [内容文件路径]
+📦 ProjectAwareLogger 归档工具
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+用法: 
+  node archive.js <标题> [内容文件路径]
 
 示例:
   node archive.js "2026-03-08 工作日志" ./log.md
-  node archive.js "今日总结" 
-  (从 stdin 读取内容)
+  cat log.md | node archive.js "2026-03-08 工作日志"
+  node archive.js "今日总结" < summary.md
+
+配置: 
+  复制 config.example.json 为 config.json 并填入你的配置
 `);
     process.exit(1);
   }

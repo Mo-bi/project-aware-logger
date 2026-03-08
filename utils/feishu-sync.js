@@ -190,7 +190,7 @@ class FeishuSync {
       const result = await this.openclaw.feishuDoc('create_and_write', {
         title: title,
         content: '# ' + title + '\n\n文档内容待填充...',
-        owner_open_id: 'ou_b3d2eb77869e0c864b3b32ed7f5a074c' // 你的open_id
+        // owner_open_id: 'YOUR_OPEN_ID' // 如需指定文档所有者，填入你的 open_id
       });
       
       if (result.success) {

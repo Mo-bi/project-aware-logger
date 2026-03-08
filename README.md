@@ -22,16 +22,69 @@ npm install
 
 ## 配置
 
-复制 `feishu-config-example.json` 为 `feishu-config.json` 并填入你的飞书配置：
+### 1. 复制配置文件
+
+```bash
+cp config.example.json config.json
+```
+
+### 2. 编辑 config.json
 
 ```json
 {
-  "appId": "your-app-id",
-  "appSecret": "your-app-secret"
+  "feishu": {
+    "app_id": "你的飞书应用ID",
+    "app_secret": "你的飞书应用密钥",
+    "member_id": "你的open_id（用于自动设置编辑权限）"
+  },
+  "local": {
+    "base_path": "~/OpenClaw_Archives"
+  }
 }
 ```
 
+### 3. 获取飞书配置
+
+**方式一：飞书开放平台**
+1. 访问 [飞书开放平台](https://open.feishu.cn/)
+2. 创建应用，获取 App ID 和 App Secret
+3. 开启需要的权限（docx:document:create, drive:permission:member 等）
+
+**方式二：联系管理员**
+如果你是飞书企业用户，请联系企业管理员创建应用
+
+### 4. 获取你的 open_id
+
+1. 打开飞书
+2. 点击头像 → 设置 → 关于
+3. 点击自己的头像，查看用户ID
+4. 或者使用飞书 API: `https://open.feishu.cn/open-apis/authen/v1/index_access_token`
+
+**注意**：open_id 格式类似：`ou_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`
+
 ## 使用
+
+### 归档工具
+
+项目提供了 `archive.js` 归档工具，用于每日工作日志的本地+飞书双备份。
+
+```bash
+# 从文件归档
+node archive.js "2026-03-08 工作日志" ./log.md
+
+# 从 stdin 归档
+cat log.md | node archive.js "2026-03-08 工作日志"
+
+# 或者
+node archive.js "2026-03-08 工作日志" < summary.md
+```
+
+归档工具会自动：
+- ✅ 保存到本地 `~/OpenClaw_Archives/daily_logs/`
+- ✅ 同步到飞书云文档
+- ✅ 为配置的 member_id 设置编辑权限
+
+### 主程序
 
 ```bash
 node index.js
@@ -44,35 +97,16 @@ node index.js
 ```
 project-aware-logger/
 ├── index.js              # 主程序入口
-├── archive.js            # 归档工具（自动设置权限）
+├── archive.js            # 归档工具
+├── config.example.json   # 配置示例
 ├── openclaw-integration.js  # OpenClaw 集成
 ├── utils/                # 工具函数
-├── templates/           # 文档模板
-├── feishu-config-example.json  # 飞书配置示例
-├── SKILL.md            # Skill 定义
-└── USAGE.md            # 使用说明
+│   ├── feishu-sync.js   # 飞书同步
+│   └── ...
+├── templates/            # 文档模板
+├── SKILL.md             # Skill 定义
+└── USAGE.md             # 使用说明
 ```
-
-## 归档工具
-
-项目提供了 `archive.js` 归档工具，用于每日工作日志的本地+飞书双备份，并且**自动为李梦溪设置编辑权限**。
-
-### 使用方法
-
-```bash
-# 从文件归档
-node archive.js "2026-03-08 工作日志" ./log.md
-
-# 从 stdin 归档
-cat log.md | node archive.js "2026-03-08 工作日志"
-```
-
-### 功能特性
-
-- ✅ 本地保存到 `~/OpenClaw_Archives/daily_logs/`
-- ✅ 自动同步到飞书云文档
-- ✅ **自动为李梦溪设置编辑权限**
-- ✅ 生成文档链接
 
 ## 技术栈
 
@@ -80,9 +114,23 @@ cat log.md | node archive.js "2026-03-08 工作日志"
 - axios
 - @larksuiteoapi/node-sdk
 - fs-extra
-- yaml
 - 飞书开放 API
+
+## 常见问题
+
+### Q: config.json 里的 member_id 是什么？
+A: 这是你的飞书 open_id。配置后，归档工具会自动给这个用户设置文档编辑权限。
+
+### Q: 如何获取飞书应用凭证？
+A: 在 [飞书开放平台](https://open.feishu.cn/) 创建应用，然后获取 App ID 和 App Secret。
+
+### Q: 权限设置失败怎么办？
+A: 检查你的飞书应用是否有 `drive:permission:member` 权限。
 
 ## License
 
 MIT
+
+## 作者
+
+Neo (https://github.com/Mo-bi)
