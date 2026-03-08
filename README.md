@@ -44,6 +44,7 @@ node index.js
 ```
 project-aware-logger/
 ├── index.js              # 主程序入口
+├── archive.js            # 归档工具（自动设置权限）
 ├── openclaw-integration.js  # OpenClaw 集成
 ├── utils/                # 工具函数
 ├── templates/           # 文档模板
@@ -52,10 +53,32 @@ project-aware-logger/
 └── USAGE.md            # 使用说明
 ```
 
+## 归档工具
+
+项目提供了 `archive.js` 归档工具，用于每日工作日志的本地+飞书双备份，并且**自动为李梦溪设置编辑权限**。
+
+### 使用方法
+
+```bash
+# 从文件归档
+node archive.js "2026-03-08 工作日志" ./log.md
+
+# 从 stdin 归档
+cat log.md | node archive.js "2026-03-08 工作日志"
+```
+
+### 功能特性
+
+- ✅ 本地保存到 `~/OpenClaw_Archives/daily_logs/`
+- ✅ 自动同步到飞书云文档
+- ✅ **自动为李梦溪设置编辑权限**
+- ✅ 生成文档链接
+
 ## 技术栈
 
 - Node.js
 - axios
+- @larksuiteoapi/node-sdk
 - fs-extra
 - yaml
 - 飞书开放 API

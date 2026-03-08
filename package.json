@@ -17,6 +17,7 @@
   "author": "Neo",
   "license": "MIT",
   "dependencies": {
+    "@larksuiteoapi/node-sdk": "^1.59.0",
     "axios": "^1.13.6",
     "fs-extra": "^11.3.4",
     "path": "^0.12.7",
